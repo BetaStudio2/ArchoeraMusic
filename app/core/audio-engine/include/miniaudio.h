@@ -33878,8 +33878,14 @@ static ma_result ma_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* 
     return MA_SUCCESS;
 }
 
-#if (defined(MAC_OS_VERSION_12_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_12_0) || \
-    (defined(__IPHONE_15_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_15_0)
+/* macOS 12+ / iOS 15+ 使用新命名 kAudioObjectPropertyElementMain。
+   原条件依赖 MAC_OS_VERSION_12_0 / __IPHONE_15_0 宏——但 Xcode 下 macOS
+   平台只定义 MAC_OS_X_VERSION_MAX_ALLOWED 而不定义 MAC_OS_VERSION_*，
+   导致误走 deprecated 的 Master 分支（SDK >= 12 时每次编译报
+   -Wdeprecated-declarations）；改用 MAX_ALLOWED 版本宏直接判断。 */
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 120000
+#define AUDIO_OBJECT_PROPERTY_ELEMENT kAudioObjectPropertyElementMain
+#elif defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000
 #define AUDIO_OBJECT_PROPERTY_ELEMENT kAudioObjectPropertyElementMain
 #else
 /* kAudioObjectPropertyElementMaster is deprecated. */
